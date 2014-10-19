@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# make use of httplib.responses()
 import socket
 from datetime import datetime
 

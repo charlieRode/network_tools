@@ -21,8 +21,9 @@ def htmlize(drct):
     return "<html>\n<body>\n<ul>\n{content}\n</ul>\n</body>\n</html>".format(content=content)
 
 def parse_request(request):
-    parsed = request.split("\r\n")   # <--- splits the request by new lines so the init req and each header is seperated.
-    return parsed
+    parsed = request.split("\r\n")   # <--- Splits the request by new lines so the init req and each header is seperated.
+    return parsed                    #      We haven't been asked to do anything with request headers, so for now, if any are passed as
+                                     #      as a part of the request, they will sit here.
 
 def parse_init_req_line(req_line):
     """Takes an HTTP request in the form of a string and parses it. Returns a tuple containing
@@ -42,6 +43,24 @@ def parse_init_req_line(req_line):
 def reqOK():
     """Returns HTTP '200 OK' response"""
     pass
+
+def responseHeaders(h1, h2, h3):
+    """Returns a dict of headers to be used in the response"""
+    headers = {}
+    headers['Content-Type'] = h1
+    headers['Date'] = h2
+    headers['Server'] = "ServerTron4000"
+    headers['Content-Length'] = h3
+
+def buildResponse(init_line, hdrs, body):
+    """Build the final response to be sent to the client. Status, headers and all"""
+    line1 = init_line + "\r\n"
+    header_block = []
+    for k, v in hdrs.items():
+        header_block.append("%s:  %s"%(k,v))
+    headers = ("\r\n").join(header_block)
+    bodylines = "\r\n\r\n" + body
+    return line1 + headers + bodylines
 
 def raiseResponse(status_code):
     """Raise appropriate status response. Makes use of httplib.responses"""
@@ -77,6 +96,7 @@ def getResource(uri):
 
 
 def Main():
+    pass
     """Here will be the main functionality of the server. We will build sockets, establish connections,
     listen for requests and return responses"""
     host, port = '127.0.0.1', 5000
@@ -94,15 +114,15 @@ def Main():
         request = next
         while next != "\r\n":      # <--- If I want to be able to send a body in with the request (which is seperateted
             next = conn.recv(1024) #      from the initial request line and headers with a blank line, then just re-write
-            request += next        #      this condition to be 'while "\r\n\r\n" not in request.'
+            request += next        #      this condition to be 'while "\r\n\r\n" not in request:...'
         
         request = parse_request(request)  # <--- Now my request is split into chunks: Init line, header1, header2...
-        result = parse_init_req_line(request[0])  # <--- URI extracted from init request line 
+        result = parse_init_req_line(request[0])  # <--- tuple of (URI, status code) from init request line 
         uri = result[0]
         status = result[1]
-        print "URI: " + uri
-        print "STATUS: " + raiseResponse(status)
-
+        if status != 200:
+            # # # Need to start building response. Have initial response line. # # #
+            pass
         conn.sendall()
         conn.shutdown(socket.SHUT_WR)
         conn.close()

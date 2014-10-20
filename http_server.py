@@ -128,6 +128,16 @@ def Main():
             conn.shutdown(socket.SHUT_WR)
             conn.close()
         else:
+            gather = getResource(uri)
+            status = gather[3]
+            if status == 404:
+                init_response_line = "HTTP/1.1 %s" % raiseResponse(status)
+                response_body = "Error 404. <%s> was not found." % uri
+                headers = responseHeaders('text/html', datetime.now(), len(response_body))
+                response = buildResponse(init_response_line, headers, response_body)
+                conn.sendall(response)
+                conn.shutdown(socket.SHUT_WR)
+                conn.close()
 
     s.close()
 

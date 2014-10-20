@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import socket, os
+from httplib import responses
 
 def get_size(dirname):
     """Gets the total size of a given directory"""
@@ -19,18 +20,32 @@ def htmlize(drct):
         content = ("\n").join(lst)
     return "<html>\n<body>\n<ul>\n{content}\n</ul>\n</body>\n</html>".format(content=content)
 
-def parse_request(req):
-    """Takes an HTTP request in the form of a string and parses it, returning the URI,
-    if the request is valid"""
-    pass
+def parse_request(request):
+    parsed = request.split("\r\n")   # <--- splits the request by new lines so the init req and each header is seperated.
+    return parsed
+
+def parse_init_req_line(req_line):
+    """Takes an HTTP request in the form of a string and parses it. Returns a tuple containing
+    the URI (or where it should be) and a status code: 200 if the parse was successful, 400/405
+    if it was not. Takes the initial request line as argument"""
+    if req_line[:3] != "GET":
+        status = 405
+        # # # Raise Error 405 # # #
+    elif req_line[-8:] != "HTTP/1.1":
+        status = 400
+        # # # Raise Error 400 # # #
+    else:
+        status = 200
+    return (req_line[3:-8].strip(), status)
+    
 
 def reqOK():
     """Returns HTTP '200 OK' response"""
     pass
 
-def reqERR():
-    """Returns HTTP error response. Makes use of the module httplib.responses()"""
-    pass
+def raiseResponse(status_code):
+    """Raise appropriate status response. Makes use of httplib.responses"""
+    return "%s %s" % (status_code, responses[status_code])
 
 def getResource(uri):
     """Takes URI as argument; returns a tuple containing the content_type, the content_length, and the resource requested as the body, in that order"""
@@ -54,9 +69,9 @@ def getResource(uri):
             content_length = get_size(uri)   # <--- Gets the size of the directory--the sum of the size of all files and subdirectories.  Maybe the content_length for a directory should just be the length of the content actually displayed...idk.
             body = htmlize(uri)
 
-    #   else:  # <--- If the resource does not exist, return an Error message... (as the body of the response?)
-    #   I don't know whether we want to raise an error AS the body returned, or whether we want this conditional to 
-    #   call the reqERR() funciton. Will come back to this.
+    else:
+        pass
+        # # # Raise Error 404 # # #  
 
     return (content_type, str(content_length), body)
 
@@ -75,9 +90,24 @@ def Main():
         print "Client connected from ip: <%s>" % str(addr)
         # # # Here we might need to implement a thread to do our bidding while the server listens for requests # # #
         
-        request = str(conn.recv(1024))
-        # # # From here we will need to handle the request using the above defined functions! # # #
-        #
+        next = conn.recv(1024)
+        request = next
+        while next != "\r\n":      # <--- If I want to be able to send a body in with the request (which is seperateted
+            next = conn.recv(1024) #      from the initial request line and headers with a blank line, then just re-write
+            request += next        #      this condition to be 'while "\r\n\r\n" not in request.'
+        
+        request = parse_request(request)  # <--- Now my request is split into chunks: Init line, header1, header2...
+        result = parse_init_req_line(request[0])  # <--- URI extracted from init request line 
+        uri = result[0]
+        status = result[1]
+        print "URI: " + uri
+        print "STATUS: " + raiseResponse(status)
+
+        conn.sendall()
+        conn.shutdown(socket.SHUT_WR)
+        conn.close()
+    s.close()
+
         # # # First, we will parse the request to determine if it is valid. If it is, we will # # #
         #     extract the URI from the request and return it. If it is not valid, we will call
         #     upon our reqERR() function to raise the appropriate error message.
@@ -89,3 +119,5 @@ def Main():
         # # # Finally, the data returned from getResource() will be packaged with an HTTP     # # #
         #     "200 OK" response which we will send back through the socket
 
+if __name__ == '__main__':
+    Main()

@@ -133,12 +133,15 @@ def Main():
             if status == 404:
                 init_response_line = "HTTP/1.1 %s" % raiseResponse(status)
                 response_body = "Error 404. <%s> was not found." % uri
-                headers = responseHeaders('text/html', datetime.now(), len(response_body))
-                response = buildResponse(init_response_line, headers, response_body)
-                conn.sendall(response)
-                conn.shutdown(socket.SHUT_WR)
-                conn.close()
-
+                headers = responseHeaders('text/html', datetime.now(), len(response_body)) 
+            else:
+                init_response_line = "HTTP/1.1 %s" % raiseResponse(status)
+                response_body = gather[2]
+                headers = responseHeaders(gather[0], datetime.now(), gather[1])
+            response = buildResponse(init_response_line, headers, response_body)
+            conn.sendall(response)
+            conn.shutdown(socket.SHUT_WR)
+            conn.close()
     s.close()
 
 if __name__ == '__main__':

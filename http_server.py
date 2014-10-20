@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import socket, os
 from httplib import responses
+from datetime import datetime
 
 def get_size(dirname):
     """Gets the total size of a given directory"""
@@ -51,6 +52,7 @@ def responseHeaders(h1, h2, h3):
     headers['Date'] = h2
     headers['Server'] = "ServerTron4000"
     headers['Content-Length'] = h3
+    return headers
 
 def buildResponse(init_line, hdrs, body):
     """Build the final response to be sent to the client. Status, headers and all"""
@@ -60,18 +62,19 @@ def buildResponse(init_line, hdrs, body):
         header_block.append("%s:  %s"%(k,v))
     headers = ("\r\n").join(header_block)
     bodylines = "\r\n\r\n" + body
-    return line1 + headers + bodylines
+    return line1 + headers + bodylines + "\r\n\r\n"
 
 def raiseResponse(status_code):
     """Raise appropriate status response. Makes use of httplib.responses"""
     return "%s %s" % (status_code, responses[status_code])
 
 def getResource(uri):
-    """Takes URI as argument; returns a tuple containing the content_type, the content_length, and the resource requested as the body, in that order"""
+    """Takes URI as argument; returns a tuple containing the content_type, the content_length, the resource requested as the body, and the status code, in that order"""
     body = ""                                       #
     content_type = ""                               # <--- Initialize the variables to hold the body and headers. For clarity.
     content_length = 0                              #
     type_dict = {'txt':'text', 'html':'text', 'py':'text', 'jpg':'image', 'png':'image'}
+    status = 200
     if os.path.exists(uri):                         # <--- If the resource exists, return a body and Headers appropriate to the request.
         if os.path.isfile(uri):                     # <--- If the resource is a file:
             content_length = os.path.getsize(uri)   # <--- Determine its size...
@@ -87,12 +90,10 @@ def getResource(uri):
             content_type = 'text/directory'
             content_length = get_size(uri)   # <--- Gets the size of the directory--the sum of the size of all files and subdirectories.  Maybe the content_length for a directory should just be the length of the content actually displayed...idk.
             body = htmlize(uri)
-
     else:
-        pass
-        # # # Raise Error 404 # # #  
+        status = 404
 
-    return (content_type, str(content_length), body)
+    return (content_type, str(content_length), body, status)
 
 
 def Main():
@@ -120,12 +121,18 @@ def Main():
         result = parse_init_req_line(request[0])  # <--- tuple of (URI, status code) from init request line 
         uri = result[0]
         status = result[1]
-        if status != 200:
-            # # # Need to start building response. Have initial response line. # # #
-            pass
-        conn.sendall()
-        conn.shutdown(socket.SHUT_WR)
-        conn.close()
+        if status != 200:          # <--- If the URI was not parsed correctly, prepare an appropriate response
+            init_response_line = "HTTP/1.1 %s" % raiseResponse(status)
+            b1 = "Error 405. Only the GET method is supported by this server."
+            b2 = "Error 400. Only HTTP version 1.1 is supported by this server."
+            response_body = b1 if status == 405 else b2
+            headers = responseHeaders('text/html', datetime.now(), len(response_body))
+            response = buildResponse(init_response_line, headers, response_body)
+            conn.sendall(response)
+            conn.shutdown(socket.SHUT_WR)
+            conn.close()
+        else:
+
     s.close()
 
         # # # First, we will parse the request to determine if it is valid. If it is, we will # # #

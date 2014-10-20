@@ -41,10 +41,6 @@ def parse_init_req_line(req_line):
     return (req_line[3:-8].strip(), status)
     
 
-def reqOK():
-    """Returns HTTP '200 OK' response"""
-    pass
-
 def responseHeaders(h1, h2, h3):
     """Returns a dict of headers to be used in the response"""
     headers = {}
@@ -134,17 +130,6 @@ def Main():
         else:
 
     s.close()
-
-        # # # First, we will parse the request to determine if it is valid. If it is, we will # # #
-        #     extract the URI from the request and return it. If it is not valid, we will call
-        #     upon our reqERR() function to raise the appropriate error message.
-        #
-        # # # Then, we will pass the URI to our getResource() function, which will return the # # #
-        #     requested resource as a body, along with Headers that properly identify the 
-        #     contents of the resource (e.g., text/html or image/gif.)
-        #
-        # # # Finally, the data returned from getResource() will be packaged with an HTTP     # # #
-        #     "200 OK" response which we will send back through the socket
 
 if __name__ == '__main__':
     Main()

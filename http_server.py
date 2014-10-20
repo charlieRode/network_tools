@@ -58,7 +58,7 @@ def getResource(uri):
     #   I don't know whether we want to raise an error AS the body returned, or whether we want this conditional to 
     #   call the reqERR() funciton. Will come back to this.
 
-    return (content_type, content_length, body)
+    return (content_type, str(content_length), body)
 
 
 def Main():

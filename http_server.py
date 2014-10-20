@@ -17,7 +17,7 @@ def htmlize(drct):
     for item in os.listdir(drct):
         lst.append("<li>%s</li>"%item)
         content = ("\n").join(lst)
-    return "<html>\n<body>\n{content}\n</body>\n</html>".format(content=content)
+    return "<html>\n<body>\n<ul>\n{content}\n</ul>\n</body>\n</html>".format(content=content)
 
 def parse_request(req):
     """Takes an HTTP request in the form of a string and parses it, returning the URI,
@@ -52,7 +52,7 @@ def getResource(uri):
         elif os.path.isdir(uri):   # <--- If the resource is a directory:
             content_type = 'text/directory'
             content_length = get_size(uri)   # <--- Gets the size of the directory--the sum of the size of all files and subdirectories.  Maybe the content_length for a directory should just be the length of the content actually displayed...idk.
-
+            body = htmlize(uri)
 
     #   else:  # <--- If the resource does not exist, return an Error message... (as the body of the response?)
     #   I don't know whether we want to raise an error AS the body returned, or whether we want this conditional to 

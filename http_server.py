@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import socket, os
 
+def htmlize(conent):
+    return "<html>{content}</html>".format(content=content)
+
 def parse_request(req):
     """Takes an HTTP request in the form of a string and parses it, returning the URI,
     if the request is valid"""
@@ -15,21 +18,31 @@ def reqERR():
     pass
 
 def getResource(uri):
-    """Takes URI as argument; returns resource requested as a body and headers indicating the type of content in the body"""
-    body = ""
-    if os.path.exists(uri):  # <--- If the resource exists, return a body and Headers appropriate to the request.
-        if os.path.isfile(uri):  # <--- If the resource is a file... 
-            with open(uri, 'rb') as f:  # <--- Open it as binary data
+    """Takes URI as argument; returns a tuple containing the content_type, the content_length, and the resource requested as the body, in that order"""
+    body = ""                                       #
+    content_type = ""                               # <--- Initialize the variables to hold the body and headers. For clarity.
+    content_length = 0                              #
+    type_dict = {'txt':'text', 'html':'text', 'py':'text', 'jpg':'image', 'png':'image'}
+    if os.path.exists(uri):                         # <--- If the resource exists, return a body and Headers appropriate to the request.
+        if os.path.isfile(uri):                     # <--- If the resource is a file:
+            content_length = os.path.getsize(uri)   # <--- Determine its size...
+            subtype =  uri.split('.')[-1]           # <--- Grab the extension...
+            content_type = "%s/%s" % (type_dict[subtype], subtype)  # <--- Determine content type from file extension, and finally...
+            with open(uri, 'rb') as f:              # <--- Open the file as binary data.
                 while True:
                     readBytes = f.read(1024)
-                    body += readBytes
+                    body += readBytes               # <--- Writes contents of file to a string.
                     if readBytes == "":
                         break
-    return body
+    #   if os.path.isdir(uri):   # <--- If the resource is a directory...
+    # I don't know how to do this yet. If the resource requested is a directory, then we want to set the body equal to
+    # an HTML listing of the contents of that directory.
 
+    #   else:  # <--- If the resource does not exist, return an Error message... (as the body of the response?)
+    #   I don't know whether we want to raise an error AS the body returned, or whether we want this conditional to 
+    #   call the reqERR() funciton. Will come back to this.
 
-
-    # else:  # <--- If the resource does not exist, return an Error message... (as the body of the response?)
+    return (content_type, content_length, body)
 
 
 def Main():

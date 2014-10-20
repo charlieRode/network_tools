@@ -1,8 +1,23 @@
 #!/usr/bin/env python
 import socket, os
 
-def htmlize(conent):
-    return "<html>{content}</html>".format(content=content)
+def get_size(dirname):
+    """Gets the total size of a given directory"""
+    size = 0
+    for item in os.listdir(dirname):
+        if os.path.isfile(item):
+            size += os.path.getsize(item)
+        elif os.path.isdir(item):
+            size += get_size(item)
+    return size
+
+def htmlize(drct):
+    """Wraps content in html tags"""
+    lst = []
+    for item in os.listdir(drct):
+        lst.append("<li>%s</li>"%item)
+        content = ("\n").join(lst)
+    return "<html>\n<body>\n{content}\n</body>\n</html>".format(content=content)
 
 def parse_request(req):
     """Takes an HTTP request in the form of a string and parses it, returning the URI,
@@ -34,9 +49,10 @@ def getResource(uri):
                     body += readBytes               # <--- Writes contents of file to a string.
                     if readBytes == "":
                         break
-    #   if os.path.isdir(uri):   # <--- If the resource is a directory...
-    # I don't know how to do this yet. If the resource requested is a directory, then we want to set the body equal to
-    # an HTML listing of the contents of that directory.
+        elif os.path.isdir(uri):   # <--- If the resource is a directory:
+            content_type = 'text/directory'
+            content_length = get_size(uri)   # <--- Gets the size of the directory--the sum of the size of all files and subdirectories.  Maybe the content_length for a directory should just be the length of the content actually displayed...idk.
+
 
     #   else:  # <--- If the resource does not exist, return an Error message... (as the body of the response?)
     #   I don't know whether we want to raise an error AS the body returned, or whether we want this conditional to 

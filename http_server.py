@@ -52,6 +52,8 @@ def responseHeaders(h1, h2, h3):
 
 def buildResponse(init_line, hdrs, body):
     """Build the final response to be sent to the client. Status, headers and all"""
+    if 'image' in hdrs['Content-Type']:
+        body = "Requested resource is an image. Here is it's binary data vomit:\r\n" + body
     line1 = init_line + "\r\n"
     header_block = []
     for k, v in hdrs.items():

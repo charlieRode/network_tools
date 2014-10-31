@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import socket
 import sys
+import echo_server
+from threading import Thread
 
 
 def main():
@@ -18,4 +20,6 @@ def main():
     return client_socket.recv(1024)
 
 if __name__ == '__main__':
+    t = Thread(target=echo_server.main)
+    t.start()
     print main()
